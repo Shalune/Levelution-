@@ -4,63 +4,63 @@ using UnityEngine;
 
 public class LevelData : EvolvingEntity {
 
-	public int numTraits = 4;
+    public int numTraits = 4;
 
-	public float branchFactor;		// 0 = linear	1 = branching
-	public float wideFactor;		// 0 = narrow 	1 = wide
-	public float colorConsistency;	// 0 = eratic	1 = consistent
-	public float colorIntensity;	// 0 = low		1 = high
-	public float colorBrightness;	// 0 = low		1 = high
+    public float branchFactor;      // 0 = linear	1 = branching
+    public float wideFactor;        // 0 = narrow 	1 = wide
+    public float colorConsistency;  // 0 = eratic	1 = consistent
+    public float colorIntensity;    // 0 = low		1 = high
+    public float colorBrightness;   // 0 = low		1 = high
 
-	public Color baseColor;
-	// move to palette?
-	public enum _colors {RED, GREEN, BLUE};
-	private _colors cmin;
-	private _colors cmid;
-	private _colors cmax;
+    public Color baseColor;
+    // move to palette?
+    public enum _colors { RED, GREEN, BLUE };
+    private _colors cmin;
+    private _colors cmid;
+    private _colors cmax;
 
-	protected override float FitEval(bool updateFitness = true){
-		float result = 0f;
+    protected override float FitEval(bool updateFitness = true) {
+        float result = 0f;
 
-		result += Mathf.Abs (0.5f - branchFactor);
-		result += Mathf.Abs (0.5f - wideFactor);
-		result += Mathf.Abs (0.5f - colorConsistency);
-		EvalColors ();
-		result += Mathf.Abs (0.5f - colorIntensity);
-		float brightGoodness = 0;
-		if (colorBrightness > 0.5f) {
-			brightGoodness = 0.5f;
-		} else {
-			brightGoodness = colorBrightness;
-		}
+        result += Mathf.Abs(0.5f - branchFactor);
+        result += Mathf.Abs(0.5f - wideFactor);
+        result += Mathf.Abs(0.5f - colorConsistency);
+        EvalColors();
+        result += Mathf.Abs(0.5f - colorIntensity);
+        float brightGoodness = 0;
+        if (colorBrightness > 0.5f) {
+            brightGoodness = 0.5f;
+        } else {
+            brightGoodness = colorBrightness;
+        }
 
-		//Debug.Log("branch = " + Mathf.Abs (0.5f - branchFactor) + " || wide = " + Mathf.Abs (0.5f - wideFactor) + " || cConsist = " + Mathf.Abs (0.5f - colorConsistency) + " || cIntens = " + Mathf.Abs (0.5f - colorIntensity));
+        //Debug.Log("branch = " + Mathf.Abs (0.5f - branchFactor) + " || wide = " + Mathf.Abs (0.5f - wideFactor) + " || cConsist = " + Mathf.Abs (0.5f - colorConsistency) + " || cIntens = " + Mathf.Abs (0.5f - colorIntensity));
 
-		result *= 2f / (float)numTraits;
+        result *= 2f / (float)numTraits;
 
-		fitness = result;
-		return result;
-	}
+        fitness = result;
+        return result;
+    }
 
-	protected override float FitNormalize (float total, float max, float min = 0f, bool updateFitness = false){
-		float result = (fitness - min) / (max - min);
+    protected override float FitNormalize(float total, float max, float min = 0f, bool updateFitness = false) {
+        float result = (fitness - min) / (max - min);
 
-		if (updateFitness)
-			fitness = result;
+        if (updateFitness)
+            fitness = result;
 
-		return result;
-	}
+        return result;
+    }
 
-	public void EvalColors(){
-		float max = baseColor.r, mid = baseColor.r, min = baseColor.r;
-		cmax = cmin = cmid = _colors.RED;
+    public void EvalColors() {
+        float max = baseColor.r, mid = baseColor.r, min = baseColor.r;
+        cmax = cmin = cmid = _colors.RED;
 
         ColorSetupGreen(ref min, ref max);
         ColorSetupBlue(ref min, ref mid, ref max);
 
-		colorIntensity = max - min;
-		//colorBrightness = (baseColor.r + baseColor.g + baseColor.b) / 3f;
-	}
+        colorIntensity = max - min;
+        //colorBrightness = (baseColor.r + baseColor.g + baseColor.b) / 3f;
+    }
 
     private void ColorSetupGreen(ref float min, ref float max)
     {
@@ -99,87 +99,50 @@ public class LevelData : EvolvingEntity {
         }
     }
 
-	public override EvolvingEntity MateWith (EvolvingEntity otherParent){
-		LevelData child = new LevelData ();
-		LevelData mate = (LevelData)otherParent;
+    public override EvolvingEntity MateWith(EvolvingEntity otherParent) {
+        LevelData child = new LevelData();
+        LevelData mate = (LevelData)otherParent;
 
-		int roll = Random.Range (0, 2);
-		if (roll > 0)
-			child.branchFactor = branchFactor;
-		else
-			child.branchFactor = mate.branchFactor;
+        child.branchFactor = PickParentValue(this, mate).branchFactor;
+        child.wideFactor = PickParentValue(this, mate).wideFactor;
+        child.colorConsistency = PickParentValue(this, mate).colorConsistency;
+        child.colorIntensity = PickParentValue(this, mate).colorIntensity;
 
-		roll = Random.Range (0, 2);
-		if (roll > 0)
-			child.wideFactor = wideFactor;
-		else
-			child.wideFactor = mate.wideFactor;
+        child.baseColor.a = 1f;
+        child.cmax = PickParentValue(this, mate).cmax;
+        LevelData tempParent = PickParentValue(this, mate);
+        _colors tempMin = tempParent.cmin;
+        if (tempMin == child.cmax)
+            tempMin = OtherParent(tempParent, this, mate).cmin;
+        if (tempMin == child.cmin)
+            child.cmin = LastColor(tempMin, child.cmax);
+        else
+            child.cmin = tempMin;
+        child.GenColor();
 
-		roll = Random.Range (0, 2);
-		if (roll > 0)
-			child.colorConsistency = colorConsistency;
-		else
-			child.colorConsistency = mate.colorConsistency;
+        // ODOT - colorBrightness
 
-		roll = Random.Range (0, 2);
-		if (roll > 0)
-			child.colorConsistency = colorConsistency;
-		else
-			child.colorConsistency = mate.colorConsistency;
+        // GenColor not working as intended, had to inherit color directly
+        child.baseColor = PickParentValue(this, mate).baseColor;
 
-		roll = Random.Range (0, 2);
-		if (roll > 0)
-			child.colorIntensity = colorIntensity;
-		else
-			child.colorIntensity = mate.colorIntensity;
+        return child;
+    }
 
-		// ODOT - debug or remove
-		/*
-		roll = Random.Range (0, 2);
-		if (roll > 0)
-			child.colorBrightness = colorBrightness;
-		else
-			child.colorBrightness = mate.colorBrightness;
-			*/
+    private LevelData PickParentValue(LevelData parent1, LevelData parent2)
+    {
+        int roll = Random.Range(0, 2);
+        if (roll > 0)
+            return parent1;
+        else
+            return parent2;
+    }
 
-
-		child.baseColor.a = 1f;
-
-		roll = Random.Range (0, 2);
-		if (roll > 0)
-			child.cmax = cmax;
-		else
-			child.cmax = mate.cmax;
-
-		roll = Random.Range (0, 2);
-		if (roll > 0 && child.cmax != cmin)
-			child.cmin = cmin;
-		else if (mate.cmin != child.cmax)
-			child.cmin = mate.cmin;
-		else
-			child.cmin = LastColor (child.cmax, mate.cmin);
-
-		if (child.cmin == _colors.BLUE || child.cmax == _colors.BLUE) {
-			if (child.cmin == _colors.GREEN || child.cmax == _colors.GREEN) {
-				child.cmid = _colors.RED;
-			} else {
-				child.cmid = _colors.GREEN;
-			}
-		} else {
-			child.cmid = _colors.BLUE;
-		}
-
-		child.GenColor ();
-
-		// GenColor not working as intended, had to inherit color directly
-		roll = Random.Range (0, 2);
-		if (roll > 0)
-			child.baseColor = baseColor;
-		else
-			child.baseColor = mate.baseColor;
-
-		return child;
-	}
+    private LevelData OtherParent(LevelData input, LevelData parent1, LevelData parent2)
+    {
+        if (input == parent1)
+            return parent2;
+        return parent1;
+    }
 
 	public _colors LastColor(_colors c1, _colors c2){
 		if (c1 == _colors.RED || c2 == _colors.RED) {
