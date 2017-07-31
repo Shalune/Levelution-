@@ -51,38 +51,53 @@ public class LevelData : EvolvingEntity {
 		return result;
 	}
 
-	private void EvalColors(){
+	public void EvalColors(){
 		float max = baseColor.r, mid = baseColor.r, min = baseColor.r;
 		cmax = cmin = cmid = _colors.RED;
 
-		if (baseColor.g > max) {
-			max = baseColor.g;
-			cmax = _colors.GREEN;
-		} else if (baseColor.g < min) {
-			min = baseColor.g;
-			cmin = _colors.GREEN;
-		} else if (baseColor.g > min && baseColor.g < max) {
-			mid = baseColor.g;
-			cmid = _colors.GREEN;
-		}
-
-		if (baseColor.b > max) {
-			max = baseColor.b;
-			cmax = _colors.BLUE;
-		} else if (baseColor.b < min) {
-			min = baseColor.b;
-			cmin = _colors.BLUE;
-		} else if (baseColor.b > min && baseColor.b < max) {
-			mid = baseColor.b;
-			cmid = _colors.BLUE;
-		}
+        ColorSetupGreen(ref min, ref max);
+        ColorSetupBlue(ref min, ref mid, ref max);
 
 		colorIntensity = max - min;
-
 		//colorBrightness = (baseColor.r + baseColor.g + baseColor.b) / 3f;
 	}
 
+    private void ColorSetupGreen(ref float min, ref float max)
+    {
+        if (baseColor.g > max)
+        {
+            max = baseColor.g;
+            cmax = _colors.GREEN;
+        }
+        else
+        {
+            min = baseColor.g;
+            cmin = _colors.GREEN;
+        }
+    }
 
+    private void ColorSetupBlue(ref float min, ref float mid, ref float max)
+    {
+        if (baseColor.b > max)
+        {
+            mid = max;
+            cmid = cmax;
+            max = baseColor.b;
+            cmax = _colors.BLUE;
+        }
+        else if (baseColor.b < min)
+        {
+            mid = min;
+            cmid = cmin;
+            min = baseColor.b;
+            cmin = _colors.BLUE;
+        }
+        else
+        {
+            mid = baseColor.b;
+            cmid = _colors.BLUE;
+        }
+    }
 
 	public override EvolvingEntity MateWith (EvolvingEntity otherParent){
 		LevelData child = new LevelData ();
