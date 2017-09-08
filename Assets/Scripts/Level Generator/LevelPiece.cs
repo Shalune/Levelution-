@@ -4,20 +4,112 @@ using UnityEngine;
 
 public class LevelPiece : MonoBehaviour {
 
+    public enum _roomTypes { r2x2, r5x4, r4x5, r7x3, r3x7, r10x10 };
+    public enum _hallTypes { h1x4, h4x1 };
+    // dimensions, center, min, max exits
 
-	//public GameObject gameObj;
-	public Vector2 dimensions;
+    //public GameObject gameObj;
+    public Vector2 dimensions;
 	public Vector2 center;
 	public Vector2 pos;
 	public int minExits;
 	public int maxExits;
 	public List<Vector3> exits;
 	public List<LevelPiece> children;
-	public Color levelColor;
+	public Color levelColor; // NYI
 	public bool isHall;
 
+    public static LevelPiece NewPiece(_roomTypes rType)
+    {
+        Vector2 dimInput, centerInput;
+        int minExInput, maxExInput;
 
-	public Vector2 CreateFromEntrance(Vector3 otherExit, LevelPiece otherPiece){
+        switch (rType)
+        {
+            case _roomTypes.r5x4:
+                dimInput = new Vector2(5, 4);
+                centerInput = new Vector2(2, 1.5f);
+                minExInput = 1;
+                maxExInput = 5;
+                break;
+            case _roomTypes.r4x5:
+                dimInput = new Vector2(4, 5);
+                centerInput = new Vector2(1.5f, 2);
+                minExInput = 1;
+                maxExInput = 5;
+                break;
+            case _roomTypes.r7x3:
+                dimInput = new Vector2(7, 3);
+                centerInput = new Vector2(3, 1);
+                minExInput = 2;
+                maxExInput = 4;
+                break;
+            case _roomTypes.r3x7:
+                dimInput = new Vector2(3, 7);
+                centerInput = new Vector2(1, 3);
+                minExInput = 2;
+                maxExInput = 4;
+                break;
+            case _roomTypes.r10x10:
+                dimInput = new Vector2(10, 10);
+                centerInput = new Vector2(4.5f, 4.5f);
+                minExInput = 1;
+                maxExInput = 4;
+                break;
+            case _roomTypes.r2x2:
+            default:
+                dimInput = new Vector2(5, 4);
+                centerInput = new Vector2(2, 1.5f);
+                minExInput = 1;
+                maxExInput = 5;
+                break;
+        }
+
+        LevelPiece newPiece = NewPiece(dimInput, centerInput, minExInput, maxExInput, false);
+        return newPiece;
+        //ODOT - call general constructor based on roomtype, pass preset values
+        //ODOT - FUTURE - load from file
+    }
+
+    public static LevelPiece NewPiece(_hallTypes hType)
+    {
+        Vector2 dimInput, centerInput;
+        int minExInput, maxExInput;
+
+        switch (hType)
+        {
+            case _hallTypes.h1x4:
+                dimInput = new Vector2(1, 4);
+                centerInput = new Vector2(0, 1.5f);
+                minExInput = 2;
+                maxExInput = 2;
+                break;
+            case _hallTypes.h4x1:
+            default:
+                dimInput = new Vector2(4, 1);
+                centerInput = new Vector2(1.5f, 0);
+                minExInput = 2;
+                maxExInput = 2;
+                break;
+        }
+
+        LevelPiece newPiece = NewPiece(dimInput, centerInput, minExInput, maxExInput, true);
+        return newPiece;
+        //ODOT - FUTURE - load from file
+    }
+
+    public static LevelPiece NewPiece(Vector2 dimensions, Vector2 center, int minExits, int maxExits, bool isHall = false)
+    {
+        LevelPiece newPiece = new LevelPiece();
+        newPiece.dimensions = dimensions;
+        newPiece.center = center;
+        newPiece.minExits = minExits;
+        newPiece.maxExits = maxExits;
+        newPiece.isHall = isHall;
+        return newPiece;
+    }
+
+    public Vector2 CreateFromEntrance(Vector3 otherExit, LevelPiece otherPiece){
 		
 		Vector3 processedInput = otherExit;
 		processedInput += (Vector3)otherPiece.pos;
