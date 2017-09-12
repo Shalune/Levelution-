@@ -107,6 +107,7 @@ public class LevelData : EvolvingEntity {
         child.wideFactor = PickParentValue(this, mate).wideFactor;
         child.colorConsistency = PickParentValue(this, mate).colorConsistency;
         child.colorIntensity = PickParentValue(this, mate).colorIntensity;
+        child.colorBrightness = PickParentValue(this, mate).colorBrightness;
 
         child.baseColor.a = 1f;
         child.cmax = PickParentValue(this, mate).cmax;
@@ -120,10 +121,9 @@ public class LevelData : EvolvingEntity {
             child.cmin = tempMin;
         child.GenColor();
 
-        // ODOT - colorBrightness
 
         // GenColor not working as intended, had to inherit color directly
-        child.baseColor = PickParentValue(this, mate).baseColor;
+        //child.baseColor = PickParentValue(this, mate).baseColor;
 
         return child;
     }
@@ -224,6 +224,7 @@ public class LevelData : EvolvingEntity {
 		baseColor.g = Random.Range (0f, 1f);
 		baseColor.b = Random.Range (0f, 1f);
 		baseColor.a = 1f;
+        EvalColors();
 	}
 		
 
@@ -251,6 +252,6 @@ public class LevelData : EvolvingEntity {
 	}
 
 	public override void PrintInfo(){
-		Debug.Log ("fitness = " + FitEval() + " || branchFactor = " + branchFactor + " || wideFactor = " + wideFactor + " || colorConsistency = " + colorConsistency + " || color = " + baseColor);
+		Debug.Log ("fitness = " + FitEval() + " || branchFactor = " + branchFactor + " || wideFactor = " + wideFactor + " || colorConsistency = " + colorConsistency + " || colorIntensity = " + colorIntensity + " || color = " + baseColor);
 	}
 }

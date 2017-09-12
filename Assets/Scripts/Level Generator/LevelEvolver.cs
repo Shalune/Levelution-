@@ -20,16 +20,17 @@ public class LevelEvolver : GeneticSolver {
 
 		ePopulation = new EvolvingPopulation<LevelData> ();
 		ePopulation.NewGeneration ();
-		DisplayImprovement ();
+        //DisplayImprovement ();
+        GetFitInfo();
 		firstGen = false;
 
 		for (int i = 0; i < maxGenerations; i++) {
 			ePopulation.NewGeneration ();
-			DisplayImprovement ();
+			//DisplayImprovement ();
 		}
 			
 
-		DisplayImprovement ();
+		//DisplayImprovement ();
 		DisplaySolution ();
 
 		// generate level from solution
