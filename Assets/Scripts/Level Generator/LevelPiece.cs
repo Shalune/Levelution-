@@ -18,52 +18,14 @@ public class LevelPiece : MonoBehaviour {
 	public List<LevelPiece> children;
 	public Color levelColor; // NYI
 	public bool isHall;
+    public float wideFactor;
 
     public static LevelPiece NewPiece(_roomTypes rType)
     {
-        Vector2 dimInput, centerInput;
-        int minExInput, maxExInput;
-
-        switch (rType)
-        {
-            case _roomTypes.r5x4:
-                dimInput = new Vector2(5, 4);
-                centerInput = new Vector2(2, 1.5f);
-                minExInput = 1;
-                maxExInput = 5;
-                break;
-            case _roomTypes.r4x5:
-                dimInput = new Vector2(4, 5);
-                centerInput = new Vector2(1.5f, 2);
-                minExInput = 1;
-                maxExInput = 5;
-                break;
-            case _roomTypes.r7x3:
-                dimInput = new Vector2(7, 3);
-                centerInput = new Vector2(3, 1);
-                minExInput = 2;
-                maxExInput = 4;
-                break;
-            case _roomTypes.r3x7:
-                dimInput = new Vector2(3, 7);
-                centerInput = new Vector2(1, 3);
-                minExInput = 2;
-                maxExInput = 4;
-                break;
-            case _roomTypes.r10x10:
-                dimInput = new Vector2(10, 10);
-                centerInput = new Vector2(4.5f, 4.5f);
-                minExInput = 1;
-                maxExInput = 4;
-                break;
-            case _roomTypes.r2x2:
-            default:
-                dimInput = new Vector2(5, 4);
-                centerInput = new Vector2(2, 1.5f);
-                minExInput = 1;
-                maxExInput = 5;
-                break;
-        }
+        Vector2 dimInput = LevelTemplateLibrary.RoomDimensions(rType);
+        Vector2 centerInput = LevelTemplateLibrary.RoomCenter(rType);
+        int minExInput = LevelTemplateLibrary.RoomMinExits(rType);
+        int maxExInput = LevelTemplateLibrary.RoomMaxExits(rType);
 
         LevelPiece newPiece = NewPiece(dimInput, centerInput, minExInput, maxExInput, false);
         return newPiece;
@@ -73,25 +35,10 @@ public class LevelPiece : MonoBehaviour {
 
     public static LevelPiece NewPiece(_hallTypes hType)
     {
-        Vector2 dimInput, centerInput;
-        int minExInput, maxExInput;
-
-        switch (hType)
-        {
-            case _hallTypes.h1x4:
-                dimInput = new Vector2(1, 4);
-                centerInput = new Vector2(0, 1.5f);
-                minExInput = 2;
-                maxExInput = 2;
-                break;
-            case _hallTypes.h4x1:
-            default:
-                dimInput = new Vector2(4, 1);
-                centerInput = new Vector2(1.5f, 0);
-                minExInput = 2;
-                maxExInput = 2;
-                break;
-        }
+        Vector2 dimInput = LevelTemplateLibrary.HallDimensions(hType);
+        Vector2 centerInput = LevelTemplateLibrary.HallCenter(hType);
+        int minExInput = LevelTemplateLibrary.HallMinExits(hType);
+        int maxExInput = LevelTemplateLibrary.HallMaxExits(hType);
 
         LevelPiece newPiece = NewPiece(dimInput, centerInput, minExInput, maxExInput, true);
         return newPiece;
@@ -349,4 +296,58 @@ public class LevelPiece : MonoBehaviour {
 		Debug.Log ("Reached end of LevelPiece.ExitDirection, invalid input received.");
 		return noResult;
 	}
+
+    public void CalculateWideFactor()
+    {
+        float max, min;
+        if (dimensions.x > dimensions.y)
+        {
+            max = dimensions.x;
+            min = dimensions.y;
+        }
+        else
+        {
+            max = dimensions.y;
+            min = dimensions.x;
+        }
+
+        wideFactor = min / max;
+    }
+
+    
+    public static float GetWideFactor(_hallTypes type)
+    {
+        float max, min;
+        Vector2 dimensions = LevelTemplateLibrary.HallDimensions(type);
+        if (dimensions.x > dimensions.y)
+        {
+            max = dimensions.x;
+            min = dimensions.y;
+        }
+        else
+        {
+            max = dimensions.y;
+            min = dimensions.x;
+        }
+
+        return (min / max);
+    }
+
+    public static float GetWideFactor(_roomTypes type)
+    {
+        float max, min;
+        Vector2 dimensions = LevelTemplateLibrary.RoomDimensions(type);
+        if (dimensions.x > dimensions.y)
+        {
+            max = dimensions.x;
+            min = dimensions.y;
+        }
+        else
+        {
+            max = dimensions.y;
+            min = dimensions.x;
+        }
+
+        return (min / max);
+    }
 }

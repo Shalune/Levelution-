@@ -219,7 +219,9 @@ public class LevelGenerator : MonoBehaviour {
 			newColor.r = ColorVariation (newColor.r);
 			newColor.g = ColorVariation (newColor.g);
 			newColor.b = ColorVariation (newColor.b);
-		}
+            piece.levelColor = newColor;
+
+        }
 	}
 
 	public float ColorVariation(float baseVal){
@@ -242,6 +244,6 @@ public class LevelGenerator : MonoBehaviour {
 	}
 
 	public float HallBoostFromWide(){
-		return (1f - levelParams.wideFactor) / 7f;
+		return (1f - levelParams.wideFactor) / 7f;                              // remove magic number
 	}
 }
