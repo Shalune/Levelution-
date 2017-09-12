@@ -65,8 +65,8 @@ public class LevelGenerator : MonoBehaviour {
 	}
 
 	public void CreateStartingRoom(){
-		GameObject roomType = ChoosePiece ();
-		headNode = roomType.GetComponent<LevelPiece> ();
+		GameObject roomType = ChoosePiece ();               // to enum
+        headNode = roomType.GetComponent<LevelPiece> ();    // new constructor
 		headNode.CreateFromEntrance ();
 		GenerateExitsFor (headNode);
 		ColorPiece (ref headNode);
@@ -78,15 +78,15 @@ public class LevelGenerator : MonoBehaviour {
 
 	public void CreateRoom(){
 		Vector3 startingExit = unexpandedExits.Dequeue();
-		GameObject pieceType = ChoosePiece();
-		LevelPiece piece = pieceType.GetComponent<LevelPiece> ();
+		GameObject pieceType = ChoosePiece();                       // to enum
+		LevelPiece piece = pieceType.GetComponent<LevelPiece> ();   // new constructor
 		piece.CreateFromEntrance(startingExit);
 
 		int attempts = 0;
 
 		while (CollidesWithLevel ((Vector2)piece.pos, piece.dimensions)) {
-			pieceType = ChoosePiece();
-			piece = pieceType.GetComponent<LevelPiece> ();
+			pieceType = ChoosePiece();                          // to enum
+			piece = pieceType.GetComponent<LevelPiece> ();      // new constructor
 			piece.CreateFromEntrance(startingExit);
 
 			attempts++;
@@ -168,7 +168,7 @@ public class LevelGenerator : MonoBehaviour {
 		}
 	}
 		
-	public GameObject ChoosePiece(List<GameObject> pieceOptions){
+	public GameObject ChoosePiece(List<GameObject> pieceOptions){   // change to enum
 
 		GameObject result = null;
 		int i = 0;
@@ -184,7 +184,7 @@ public class LevelGenerator : MonoBehaviour {
 				roll -= (0.5f - roll) * 0.75f;		// ODOT - replace magic numbers
 			}
 
-			if (roll < PieceWideFactor(pieceOptions[cycle].GetComponent<LevelPiece>()) * levelParams.wideFactor) {		
+			if (roll < PieceWideFactor(pieceOptions[cycle].GetComponent<LevelPiece>()) * levelParams.wideFactor) {	// change to enum method	
 				result = pieceOptions[cycle];
 				return result;
 			} else if (i >= 1) {
@@ -202,9 +202,9 @@ public class LevelGenerator : MonoBehaviour {
 		return null;
 	}
 
-	public void CreatePiece(GameObject pieceType, LevelPiece piece){
-		GameObject newObj = (GameObject)Object.Instantiate ((Object)pieceType);
-		LevelPiece newPiece = newObj.GetComponent<LevelPiece> ();
+	public void CreatePiece(GameObject pieceType, LevelPiece piece){            // change to enum
+		GameObject newObj = (GameObject)Object.Instantiate ((Object)pieceType); // call new instantiation from LevelPiece
+		LevelPiece newPiece = newObj.GetComponent<LevelPiece> ();               // adjust
 		newPiece = piece;
 	}
 
@@ -223,12 +223,12 @@ public class LevelGenerator : MonoBehaviour {
 	}
 
 	public float ColorVariation(float baseVal){
-		float min = Mathf.Max (baseVal * -1, maxColorVariation * -1);
-		float max = Mathf.Min (1f - baseVal, maxColorVariation);
+		float min = Mathf.Max (0f, baseVal - maxColorVariation);
+		float max = Mathf.Min (1f, baseVal + maxColorVariation);
 		return Random.Range(min, max);
 	}
 
-	public float PieceWideFactor(LevelPiece piece){
+	public float PieceWideFactor(LevelPiece piece){                             // move to LevelPiece based on enum
 		float max, min;
 		if (piece.dimensions.x > piece.dimensions.y) {
 			max = piece.dimensions.x;
