@@ -36,7 +36,7 @@ public class LevelEvolver : GeneticSolver {
 		// generate level from solution
 		if (generateLevel) {
 			LevelGenerator generator = new LevelGenerator ();
-			generator.LoadTemplates (library.roomPieces, library.hallPieces);
+			//generator.LoadTemplates (library.roomPieces, library.hallPieces);     // delete once replaced
 			generator.GenerateAndInstantiate (solution);
 		}
 	}

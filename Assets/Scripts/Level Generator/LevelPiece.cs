@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class LevelPiece : MonoBehaviour {
 
-    public enum _roomTypes { r2x2, r5x4, r4x5, r7x3, r3x7, r10x10 };
-    public enum _hallTypes { h1x4, h4x1 };
+    public enum _roomTypes { r2x2, r5x4, r4x5, r7x3, r3x7, r10x10, NUMELEMENTS };
+    public enum _hallTypes { h1x4, h4x1, NUMELEMENTS };
     // dimensions, center, min, max exits
 
     //public GameObject gameObj;
@@ -19,6 +19,11 @@ public class LevelPiece : MonoBehaviour {
 	public Color levelColor; // NYI
 	public bool isHall;
     public float wideFactor;
+    public _roomTypes roomType = _roomTypes.NUMELEMENTS;
+    public _hallTypes hallType = _hallTypes.NUMELEMENTS;
+
+    public GameObject roomTemplate;
+    public GameObject createdRoom;
 
     public static LevelPiece NewPiece(_roomTypes rType)
     {
@@ -28,6 +33,7 @@ public class LevelPiece : MonoBehaviour {
         int maxExInput = LevelTemplateLibrary.RoomMaxExits(rType);
 
         LevelPiece newPiece = NewPiece(dimInput, centerInput, minExInput, maxExInput, false);
+        newPiece.roomType = rType;
         return newPiece;
         //ODOT - call general constructor based on roomtype, pass preset values
         //ODOT - FUTURE - load from file
@@ -41,6 +47,7 @@ public class LevelPiece : MonoBehaviour {
         int maxExInput = LevelTemplateLibrary.HallMaxExits(hType);
 
         LevelPiece newPiece = NewPiece(dimInput, centerInput, minExInput, maxExInput, true);
+        newPiece.hallType = hType;
         return newPiece;
         //ODOT - FUTURE - load from file
     }

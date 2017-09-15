@@ -11,24 +11,31 @@ public class LevelGenerator : MonoBehaviour {
 	public float bufferBranching = 0.5f;
 	public int reAttemptPlacementThreshold = 20;		// number of times a new piece or exit will attempt to be re-placed to avoid collisions
 	public float maxColorVariation = 0.3f;
+    public float inverseHallBoostFromWide = 7f;
+    public float shrinkLowRollForPiece = 0.75f;
 
-	LevelPiece headNode;
+
+    LevelPiece headNode;
 	public float hallProbability = 0.5f;
 	public Queue<Vector3> unexpandedExits;
 	public List<LevelPiece> levelPieces;
-	public List<GameObject> roomTemplates;
-	public List<GameObject> hallTemplates;
+    public List<GameObject> rooms;
+	//public List<GameObject> roomTemplates;    //delete once replaced
+	//public List<GameObject> hallTemplates;    //delete once replaced
 
 	public void Init(){
 		unexpandedExits = new Queue<Vector3> ();
 		levelPieces = new List<LevelPiece> ();
+        rooms = new List<GameObject>();
 	}
 
+    /*      //delete once replaced
 	public void LoadTemplates(List<GameObject> rooms, List<GameObject> halls){
 		roomTemplates = rooms;
 		hallTemplates = halls;
 		Debug.Log ("loaded : " + roomTemplates.Count + "  " + hallTemplates.Count);
 	}
+    */
 
 	public void GenerateAndInstantiate(LevelData inputParams){
 		GenerateLevel (inputParams);
@@ -41,10 +48,10 @@ public class LevelGenerator : MonoBehaviour {
 		}
 
 		levelParams = inputParams;
-		CreateStartingRoom ();
+        CreateStartingPiece();
 
 		while (levelPieces.Count < maxRooms && unexpandedExits.Count != 0) {
-			CreateRoom ();
+            CreatePiece();
 		}
 
 		return headNode;
@@ -64,29 +71,32 @@ public class LevelGenerator : MonoBehaviour {
 		}
 	}
 
-	public void CreateStartingRoom(){
-		GameObject roomType = ChoosePiece ();               // to enum
-        headNode = roomType.GetComponent<LevelPiece> ();    // new constructor
+	public void CreateStartingPiece(){
+        //GameObject roomType = ChoosePiece ();               // to enum
+        //headNode = roomType.GetComponent<LevelPiece> ();    // new constructor
+        headNode = ChoosePiece();
 		headNode.CreateFromEntrance ();
 		GenerateExitsFor (headNode);
 		ColorPiece (ref headNode);
 
-		CreatePiece (roomType, headNode);
+		CreateRoom (headNode);
 		Debug.Log ("Created first room " + headNode.pos + "    " + headNode.dimensions);
 		levelPieces.Add (headNode);
 	}
 
-	public void CreateRoom(){
+	public void CreatePiece(){
 		Vector3 startingExit = unexpandedExits.Dequeue();
-		GameObject pieceType = ChoosePiece();                       // to enum
-		LevelPiece piece = pieceType.GetComponent<LevelPiece> ();   // new constructor
+        //GameObject pieceType = ChoosePiece();                       // to enum
+        //LevelPiece piece = pieceType.GetComponent<LevelPiece> ();   // new constructor
+        LevelPiece piece = ChoosePiece();
 		piece.CreateFromEntrance(startingExit);
 
 		int attempts = 0;
 
 		while (CollidesWithLevel ((Vector2)piece.pos, piece.dimensions)) {
-			pieceType = ChoosePiece();                          // to enum
-			piece = pieceType.GetComponent<LevelPiece> ();      // new constructor
+            //pieceType = ChoosePiece();                          // to enum
+            //piece = pieceType.GetComponent<LevelPiece> ();      // new constructor
+            piece = ChoosePiece();
 			piece.CreateFromEntrance(startingExit);
 
 			attempts++;
@@ -98,7 +108,7 @@ public class LevelGenerator : MonoBehaviour {
 		GenerateExitsFor(piece);
 		ColorPiece (ref piece);
 
-		CreatePiece (pieceType, piece);
+        CreateRoom(piece);
 		Debug.Log ("Created new room " + piece.pos + "    " + piece.dimensions);
 		levelPieces.Add(piece);
 	}
@@ -157,55 +167,108 @@ public class LevelGenerator : MonoBehaviour {
 		return false;
 	}
 
-	public GameObject ChoosePiece(bool previousIsRoom = false){
-		// ODOT change likelihood of room vs hall vased on previous
+	public LevelPiece ChoosePiece(){
+		// ODOT change likelihood of room vs hall based on previous
 		float roll = Random.Range (0f, 1f);
 
 		if (roll < hallProbability + HallBoostFromWide()) {
-			return ChoosePiece (hallTemplates);
+			return ChoosePiece (true);
 		} else {
-			return ChoosePiece (roomTemplates);
+			return ChoosePiece ();
 		}
 	}
 		
-	public GameObject ChoosePiece(List<GameObject> pieceOptions){   // change to enum
-
-		GameObject result = null;
-		int i = 0;
-		int maxIterations = 10;
-
-		int cycle = Random.Range (0, pieceOptions.Count);
-		// Debug.Log ("count = " + pieceOptions.Count + " || cycle = " + cycle);
-		int startVal = cycle;
-
-		while (true) {
-			float roll = Random.Range (0f, 1f);
-			if (roll < 0.5f) {
-				roll -= (0.5f - roll) * 0.75f;		// ODOT - replace magic numbers
-			}
-
-			if (roll < PieceWideFactor(pieceOptions[cycle].GetComponent<LevelPiece>()) * levelParams.wideFactor) {	// change to enum method	
-				result = pieceOptions[cycle];
-				return result;
-			} else if (i >= 1) {
-				result = pieceOptions[cycle];
-				return result;
-			}
-
-			cycle = (cycle + 1) % pieceOptions.Count;
-			if (cycle == startVal) {
-				i+= (1/maxIterations);
-			}
-		}
-
-		Debug.Log ("Reached end of LevelGenerator.ChoosePiece() which should not be possible");
-		return null;
+	public LevelPiece ChoosePiece(bool chooseHall=false)
+    {
+        if (chooseHall)
+            return ChooseHallPiece();
+        else
+            return ChooseRoomPiece();
 	}
 
-	public void CreatePiece(GameObject pieceType, LevelPiece piece){            // change to enum
-		GameObject newObj = (GameObject)Object.Instantiate ((Object)pieceType); // call new instantiation from LevelPiece
-		LevelPiece newPiece = newObj.GetComponent<LevelPiece> ();               // adjust
-		newPiece = piece;
+    public LevelPiece ChooseHallPiece()
+    {
+        int i = 0;
+        int maxIterations = 10;
+
+        int cycle = Random.Range(0, (int)LevelPiece._hallTypes.NUMELEMENTS);
+        int startVal = cycle;
+
+        while (true)
+        {
+            float roll = Random.Range(0f, 1f);
+            if (roll < 0.5f)
+            {
+                roll -= (0.5f - roll) * shrinkLowRollForPiece;
+            }
+
+            //PieceWideFactor(pieceOptions[cycle].GetComponent<LevelPiece>())   // delete when replaced
+            if (roll < LevelPiece.GetWideFactor((LevelPiece._hallTypes)cycle) * levelParams.wideFactor)
+            {   // change to enum method	
+                return LevelPiece.NewPiece((LevelPiece._hallTypes)cycle);
+            }
+            else if (i >= 1)
+            {
+                return LevelPiece.NewPiece((LevelPiece._hallTypes)cycle);
+            }
+
+            cycle = (cycle + 1) % (int)LevelPiece._hallTypes.NUMELEMENTS;
+            if (cycle == startVal)
+            {
+                i += (1 / maxIterations);
+            }
+        }
+
+        Debug.Log("Reached end of LevelGenerator.ChoosePiece() which should not be possible");
+        return null;
+    }
+
+    public LevelPiece ChooseRoomPiece()
+    {
+        int i = 0;
+        int maxIterations = 10;
+
+        int cycle = Random.Range(0, (int)LevelPiece._roomTypes.NUMELEMENTS);
+        int startVal = cycle;
+
+        while (true)
+        {
+            float roll = Random.Range(0f, 1f);
+            if (roll < 0.5f)
+            {
+                roll -= (0.5f - roll) * shrinkLowRollForPiece;
+            }
+
+            //PieceWideFactor(pieceOptions[cycle].GetComponent<LevelPiece>())   // delete when replaced
+            if (roll < LevelPiece.GetWideFactor((LevelPiece._roomTypes)cycle) * levelParams.wideFactor)
+            {   // change to enum method	
+                return LevelPiece.NewPiece((LevelPiece._roomTypes)cycle);
+            }
+            else if (i >= 1)
+            {
+                return LevelPiece.NewPiece((LevelPiece._roomTypes)cycle);
+            }
+
+            cycle = (cycle + 1) % (int)LevelPiece._roomTypes.NUMELEMENTS;
+            if (cycle == startVal)
+            {
+                i += (1 / maxIterations);
+            }
+        }
+
+        Debug.Log("Reached end of LevelGenerator.ChoosePiece() which should not be possible");
+        return null;
+    }
+
+
+    public void CreateRoom(LevelPiece piece)
+    {                                                          
+        //GameObject newObj = (GameObject)Object.Instantiate ((Object)pieceType); // call new instantiation from LevelPiece
+        //LevelPiece newPiece = newObj.GetComponent<LevelPiece> ();               // adjust
+        //newPiece = piece;
+        GameObject newRoom = new GameObject();
+        // initiate newRoom through piece
+        rooms.Add(newRoom);
 	}
 
 	public void ColorPiece(ref LevelPiece piece){
@@ -244,6 +307,6 @@ public class LevelGenerator : MonoBehaviour {
 	}
 
 	public float HallBoostFromWide(){
-		return (1f - levelParams.wideFactor) / 7f;                              // remove magic number
+		return (1f - levelParams.wideFactor) / inverseHallBoostFromWide;
 	}
 }
